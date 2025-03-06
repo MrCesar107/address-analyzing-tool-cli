@@ -15,6 +15,7 @@ class URLAnalyzer:
       "api-key": self.api_key,
       "Content-Type": "application/x-www-form-urlencoded",
     }
+    self.urls = tuple()
 
   def scan_url(self, url):
     if not url.strip():
@@ -35,6 +36,43 @@ class URLAnalyzer:
 
     return response.json()
 
+  def scan_urls_from_file(self, file_path):
+    if not os.path.exists(file_path):
+      print(f"The specified file in {file_path} doesn't exist")
+      return
+
+    self.__generate_urls_file_control()
+    self.__read_urls_from_file(file_path)
+    print("Scanning URLs in file...")
+
+    # for url in self.urls:
+
+    print("Retrieving results...")
+    with open("urls_control.txt", "w", encoding="utf-8") as file:
+      for url in self.urls:
+        file.write(f"{url}, 43258743285, queued\n")
+
+
+  # Private methods
+  def __read_urls_from_file(self, file_path):
+    try:
+      with open(file_path, 'r', encoding='utf-8') as file:
+        print("Reading the file...")
+        self.urls = tuple(file.read().splitlines())
+        return
+    except Exception as e:
+      print("An error has ocurred reading the file")
+      return
+
+  def __generate_urls_file_control(self):
+    open("urls_control.txt", 'w').close()
+
+  def __destroy_urls_file_control(self):
+    if os.path.exists("urls_control.txt"):
+      os.remove("urls_control.txt")
+    else:
+      print("An error has ocurred")
+
 
 def main():
   parser = argparse.ArgumentParser(
@@ -48,7 +86,7 @@ def main():
   analyzer = URLAnalyzer()
 
   if args.file:
-    print("You used the file flag")
+    analyzer.scan_urls_from_file(args.file)
 
   if args.url:
     scan_result = analyzer.scan_url(args.url)
