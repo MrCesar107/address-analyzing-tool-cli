@@ -1,8 +1,11 @@
 import argparse
 import requests
 import os
+import schedule
+import time
+import sys
+import csv
 
-from pathlib import Path
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -16,6 +19,8 @@ class URLAnalyzer:
       "Content-Type": "application/x-www-form-urlencoded",
     }
     self.urls = tuple()
+    self.control_urls = []
+    self.file_control_check = False
 
   def scan_url(self, url):
     if not url.strip():
@@ -41,23 +46,22 @@ class URLAnalyzer:
       print(f"The specified file in {file_path} doesn't exist")
       return
 
-    self.__generate_urls_file_control()
+    print("Scanning URLs in file... (This takes about 5 minutes)")
+
     self.__read_urls_from_file(file_path)
-    print("Scanning URLs in file...")
+    self.__generate_urls_file_control()
+    schedule.every(1).minutes.do(self.__generate_urls_file_control)
 
-    # for url in self.urls:
+    while not self.file_control_check:
+      schedule.run_pending() # Runs pending jobs
+      time.sleep(1) # Avoids CPU overload
 
-    print("Retrieving results...")
-    with open("urls_control.txt", "w", encoding="utf-8") as file:
-      for url in self.urls:
-        file.write(f"{url}, 43258743285, queued\n")
-
+    #print("Retrieving results...")
 
   # Private methods
   def __read_urls_from_file(self, file_path):
     try:
       with open(file_path, 'r', encoding='utf-8') as file:
-        print("Reading the file...")
         self.urls = tuple(file.read().splitlines())
         return
     except Exception as e:
@@ -65,7 +69,49 @@ class URLAnalyzer:
       return
 
   def __generate_urls_file_control(self):
-    open("urls_control.txt", 'w').close()
+    if any(isinstance(item, str) and "message:" in item for sub in self.control_urls for item in sub):
+      print(f"An error has ocurred {self.control_urls[0][1]}")
+      sys.exit()
+
+    if not os.path.exists('urls_control.txt'):
+      open("urls_control.txt", 'w').close()
+
+    if os.stat("urls_control.txt").st_size == 0:
+      self.control_urls = []
+      with open("urls_control.txt", "w", encoding="utf-8") as file:
+        for url in self.urls:
+          result = self.scan_url(url)
+
+          if result.get('message') is not None:
+            self.control_urls.append([url, f"message: {result.get('message')}"])
+            file.write(f"{url}, message: {result.get('message')}\n")
+          else:
+            self.control_urls.append([url, result.get('id'), result.get('finished')])
+            file.write(f"{url}, {result.get('id')}, {result.get('finished')}\n")
+    else:
+      self.control_urls = []
+      with open("urls_control.txt", "r", encoding="utf-8") as file:
+        url_lines = csv.reader(file)
+
+        for line in url_lines:
+          url, scan_id, state = line
+          state = state.strip().lower() == "true"
+          self.control_urls.append([url, scan_id, state])
+
+      with open("urls_control.txt", 'w', encoding='utf-8') as file:
+        for i, sub in enumerate(self.control_urls):
+          url, scan_id, state = sub
+          result = self.retrieve_scan(scan_id.strip())
+
+          if result.get('message') is not None:
+            file.write(f"{url}, message: {result.get('message')}")
+
+          self.control_urls[i][2] = result.get('finished')
+          file.write(f"{url}, {result.get('id')}, {result.get('finished')}\n")
+
+      if all(sub_element[2] == True for sub_element in self.control_urls):
+        self.file_control_check = True
+        return schedule.CancelJob # Stops scheduling jobs
 
   def __destroy_urls_file_control(self):
     if os.path.exists("urls_control.txt"):
@@ -95,7 +141,7 @@ def main():
 
   if args.retrieve_scan:
     result = analyzer.retrieve_scan(args.retrieve_scan)
-    print(f"Scan results of #{args.url}:")
+    print(f"Scan results of {args.url}:")
     print(result)
 
 
