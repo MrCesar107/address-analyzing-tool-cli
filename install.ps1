@@ -1,3 +1,9 @@
+# =========================================
+# Adrees Analyzing Terminal Tool
+# By Cesar Augusto Rodriguez Lara
+# https://github.com/MrCesar107
+# =========================================
+
 if (-Not (Get-Command python3 -ErrorAction SilentlyContinue)) {
     Write-Host "❌ Python3 is not installed."
     exit 1

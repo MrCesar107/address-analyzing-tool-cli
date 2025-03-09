@@ -1,3 +1,9 @@
+# =========================================
+# Adrees Analyzing Terminal Tool
+# By Cesar Augusto Rodriguez Lara
+# https://github.com/MrCesar107
+# =========================================
+
 #!/bin/bash
 
 SCRIPT_NAME="main.py"
