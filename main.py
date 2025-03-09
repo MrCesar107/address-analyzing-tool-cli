@@ -5,7 +5,6 @@ import schedule
 import time
 import sys
 import csv
-
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -50,13 +49,22 @@ class URLAnalyzer:
 
     self.__read_urls_from_file(file_path)
     self.__generate_urls_file_control()
+
+    # This line schedules the job for generating file control
     schedule.every(1).minutes.do(self.__generate_urls_file_control)
 
     while not self.file_control_check:
       schedule.run_pending() # Runs pending jobs
       time.sleep(1) # Avoids CPU overload
 
-    #print("Retrieving results...")
+    print("Retrieving results...")
+    self.__generate_result_file()
+
+  def destroy_urls_file_control(self):
+    if os.path.exists("urls_control.txt"):
+      os.remove("urls_control.txt")
+    else:
+      print("An error has ocurred")
 
   # Private methods
   def __read_urls_from_file(self, file_path):
@@ -90,6 +98,7 @@ class URLAnalyzer:
             file.write(f"{url}, {result.get('id')}, {result.get('finished')}\n")
     else:
       self.control_urls = []
+
       with open("urls_control.txt", "r", encoding="utf-8") as file:
         url_lines = csv.reader(file)
 
@@ -113,11 +122,46 @@ class URLAnalyzer:
         self.file_control_check = True
         return schedule.CancelJob # Stops scheduling jobs
 
-  def __destroy_urls_file_control(self):
-    if os.path.exists("urls_control.txt"):
-      os.remove("urls_control.txt")
-    else:
-      print("An error has ocurred")
+  def __generate_result_file(self):
+    self.control_urls = []
+
+    with open('urls_control.txt', 'r', encoding='utf-8') as file:
+      url_lines = csv.reader(file)
+
+      for i, line in enumerate(url_lines):
+        url, scan_id, state = line
+        result = self.retrieve_scan(scan_id.strip())
+        databases = result.get('scanners_v2')
+
+
+        self.control_urls.append([url, []])
+
+        for key, value in databases.items():
+          sub_array = self.control_urls[i][1]
+
+          if isinstance(value, dict):
+            sub_array.append([key, value.get('status')])
+          else:
+            sub_array.append([key, value])
+
+    csv_dynamic_headers = sorted({entry[0] for row in self.control_urls for entry in row[1]})
+    csv_headers = ["url"] + csv_dynamic_headers
+
+    with open('scan_results.csv', 'w', encoding='utf-8') as file:
+      writer = csv.writer(file)
+      writer.writerow(csv_headers)
+
+      for url_entry in self.control_urls:
+        url = url_entry[0]
+        values = {db: "N/A" for db in csv_dynamic_headers}
+
+        for db, status in url_entry[1]:
+          values[db] = status if status is not None else "N/A"
+
+        row = [url] + [values[db] for db in csv_dynamic_headers]
+        writer.writerow(row)
+
+    print("Results were printed in scan_results.csv")
 
 
 def main():
@@ -133,6 +177,7 @@ def main():
 
   if args.file:
     analyzer.scan_urls_from_file(args.file)
+    analyzer.destroy_urls_file_control()
 
   if args.url:
     scan_result = analyzer.scan_url(args.url)
@@ -141,9 +186,8 @@ def main():
 
   if args.retrieve_scan:
     result = analyzer.retrieve_scan(args.retrieve_scan)
-    print(f"Scan results of {args.url}:")
+    print(f"Scan results of {args.retrieve_scan}:")
     print(result)
-
 
 if __name__ == "__main__":
   main()
