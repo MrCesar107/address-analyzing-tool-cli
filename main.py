@@ -1,3 +1,9 @@
+# =========================================
+# Adrees Analyzing Terminal Tool
+# By Cesar Augusto Rodriguez Lara
+# https://github.com/MrCesar107
+# =========================================
+
 import argparse
 import requests
 import os
