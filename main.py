@@ -1,5 +1,5 @@
 # =========================================
-# Adrees Analyzing Terminal Tool
+# Address Analyzing Terminal Tool
 # By Cesar Augusto Rodriguez Lara
 # https://github.com/MrCesar107
 # =========================================
