@@ -181,7 +181,7 @@ def main():
 
   if args.url:
     scan_result = analyzer.scan_url(args.url)
-    print(f"Scan results of #{args.url}:")
+    print(f"Scan results of {args.url}:")
     print(scan_result)
 
   if args.retrieve_scan:
