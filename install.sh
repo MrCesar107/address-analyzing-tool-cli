@@ -7,7 +7,7 @@
 #!/bin/bash
 
 SCRIPT_NAME="main.py"
-VENV_DIR="venv"
+VENV_DIR="address-analyzing-tool-cli/venv"
 
 if ! command -v python3 &> /dev/null
 then
@@ -16,7 +16,7 @@ then
 fi
 
 if [ ! -d "$VENV_DIR" ]; then
-    echo "📌 Creando virtual env..."
+    echo "📌 Creating virtual env..."
     python3 -m venv "$VENV_DIR"
 else
     echo "✅ Virtual env detected."
