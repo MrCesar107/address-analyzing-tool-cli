@@ -49,9 +49,9 @@ echo "🚀 Making script executable from any place..."
 sudo cp "$SCRIPT_NAME" /usr/local/bin/
 
 SHELL_CONFIG="$HOME/.bashrc"
-if [ "$SHELL" = "/bin/zsh" ]; then
+if [ "$SHELL" = "/usr/bin/zsh" ]; then
     SHELL_CONFIG="$HOME/.zshrc"
-elif [ "$SHELL" = "/bin/fish" ]; then
+elif [ "$SHELL" = "/usr/bin/fish" ]; then
     SHELL_CONFIG="$HOME/.config/fish/config.fish"
 fi
 
