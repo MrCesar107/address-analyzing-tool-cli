@@ -156,7 +156,7 @@ class ResultsFileGenerator:
       writer.writerow(csv_headers)
 
       for url, values in urls_dict.items():
-        timestamp = datetime.now(pytz.timezone("America/Mexico_City")).strftime("%a, %d %b %Y %H:%M:%S.%f000 %Z %z")
+        timestamp = int(datetime.now(pytz.timezone("America/Mexico_City")).timestamp())
         row = [url] + [values[col] for col in csv_dynamic_headers] + [timestamp]
         writer.writerow(row)
 
