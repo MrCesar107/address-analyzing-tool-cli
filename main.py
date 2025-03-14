@@ -13,9 +13,11 @@ import sys
 import csv
 import json
 import validators
+import pytz
 from dotenv import load_dotenv
 from abc import abstractmethod
 from abc import ABCMeta
+from datetime import datetime
 
 load_dotenv()
 
@@ -133,7 +135,7 @@ class ResultsFileGenerator:
       f"{engines_prefixes_map.get(item[0], item[0][:2].lower())}_{subitem[0]}"
       for item in self.control_urls for subitem in item[2]
     })
-    csv_headers = ["url"] + csv_dynamic_headers
+    csv_headers = ["url"] + csv_dynamic_headers + ["generated_at"]
     urls_dict = {}
 
     for url_entry in self.control_urls:
@@ -154,7 +156,8 @@ class ResultsFileGenerator:
       writer.writerow(csv_headers)
 
       for url, values in urls_dict.items():
-        row = [url] + [values[col] for col in csv_dynamic_headers]
+        timestamp = datetime.now(pytz.timezone("America/Mexico_City")).strftime("%a, %d %b %Y %H:%M:%S.%f000 %Z %z")
+        row = [url] + [values[col] for col in csv_dynamic_headers] + [timestamp]
         writer.writerow(row)
 
     print("Results were printed in scan_results.csv")

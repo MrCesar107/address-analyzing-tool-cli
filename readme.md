@@ -23,9 +23,9 @@ If you use zsh:
 `Set-ExecutionPolicy Unrestricted -Scope Process
 ./install.ps1`
 
-**⚠️ YOU NEED A VALID HYBRID ANALYSIS API KEY TO USE THIS SCRIPT ⚠️**
+**⚠️ YOU NEED A VALID HYBRID ANALYSIS AND RECORDED FUTURE API KEYS TO USE THIS SCRIPT ⚠️**
 
-You must put your Hybrid Analysis API key in a .env file in the directory where the script was installed
+You must put your Hybrid Analysis and Recorded Future API keys in a .env file in the directory where the script was installed
 
 **If you are in unix system (macOS/Linux)**
 
@@ -37,17 +37,28 @@ You must put your Hybrid Analysis API key in a .env file in the directory where 
 
 You must place your .env file in the directory where you executed the intall powershell script
 
+```
+RECORDED_FUTURE_BEARER_TOKEN=YOUR_API_KEY
+HYBRID_ANALYSIS_API_KEY=YOUR_API_KEY
+```
+
 ## Usage
 These are the basic commands to use this script
 
 To analyze a single URL address:
 
-`$ address_analyzing_tool -u YOUR_URL`
+`$ address_analyzing_tool -u YOUR_URL --engine ENGINE_NAME`
 
 To retrive a previous analysis
 
-`$ address_analyzing_tool -u SCAN_ID`
+`$ address_analyzing_tool -u SCAN_ID --engine ENGINE_NAME`
 
 To analyze multiple URL addresses in a file. Please use a simple text file with your addresses
 
 `$ address_analyzing_tool -f YOUR_FILE_PATH`
+
+To print the scanning engines available in the script
+`$ address_analyzing_tool -l`
+
+To print the help manual of the script
+`$ address_analyzing_tool -h`
