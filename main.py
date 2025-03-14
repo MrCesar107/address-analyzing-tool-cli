@@ -96,6 +96,7 @@ class ResultsFileGenerator:
     self.hybrid_analysis_scanner = HybridAnalysisScanner()
     self.recorded_future_scanner = RecordedFutureScanner()
     self.control_urls = []
+    self.isHeadersWritten = False
 
   def generate(self):
     with open('urls_control.txt', 'r', encoding='utf-8') as file:
@@ -151,9 +152,18 @@ class ResultsFileGenerator:
           key_header = f"{prefix}_{subitem[0]}"
           urls_dict[url][key_header] = subitem[1] if subitem[1] is not None else "N/A"
 
-    with open('scan_results.csv', 'w', encoding='utf-8') as file:
+    if not os.path.exists('scan_results.csv'):
+      open("scan_results.csv", 'w').close()
+
+    with open('scan_results.csv', 'r', encoding='utf-8') as file:
+      first_line = file.readline().strip()
+      self.isHeadersWritten = first_line == ",".join(csv_headers)
+
+    with open('scan_results.csv', 'a', encoding='utf-8') as file:
       writer = csv.writer(file)
-      writer.writerow(csv_headers)
+
+      if not self.isHeadersWritten:
+        writer.writerow(csv_headers)
 
       for url, values in urls_dict.items():
         timestamp = int(datetime.now(pytz.timezone("America/Mexico_City")).timestamp())
