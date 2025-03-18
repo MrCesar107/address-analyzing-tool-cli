@@ -103,7 +103,7 @@ class ResultsFileGenerator:
       url_lines = csv.reader(file)
 
       for i, line in enumerate(url_lines):
-        engine, url, scan_id, state = line
+        engine, url, scan_id, _state = line
 
         if engine == "RecordedFuture":
           result = self.recorded_future_scanner.retrieve_scan_results(scan_id.strip())
