@@ -11,6 +11,7 @@ from src.core.logger import logger
 from src.scanners.hybrid_analysis import HybridAnalysisScanner
 from src.scanners.recorded_future import RecordedFutureScanner
 from src.utils.file_handlers import ResultsFileHandler
+from src.utils.url_file_processor import URLFileProcessor
 
 class URLAnalyzer:
   def __init__(self):
@@ -58,6 +59,15 @@ class URLAnalyzer:
       logger.error(f"Error retrieving scan results {str(e)}")
       raise
 
+  def analyze_urls_from_file(self, file_path: str):
+    try:
+      processor = URLFileProcessor(self.scanners)
+      processor.process_file(file_path)
+      logger.info(f"URLs file analysis completed: {file_path}")
+    except Exception as e:
+      logger.error(f"Error while processing URLs file: {str(e)}")
+      raise
+
 def main():
   parser = argparse.ArgumentParser(
     prog="address-analyzing-tool",
@@ -79,7 +89,6 @@ def main():
 
   if args.file:
     analyzer.analyze_urls_from_file(args.file)
-    analyzer.destroy_urls_file_control()
 
   if args.url:
     try:

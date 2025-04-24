@@ -27,7 +27,7 @@ class RecordedFutureScanner(BaseScanner):
     logger.info(f"Retrieving RecordedFuture scanning results")
 
     try:
-      response = self.session.get(f"{self.base_url}/samples/{scan_id}")
+      response = self.session.get(f"{self.base_url}/samples/{scan_id}/summary")
       response.raise_for_status()
       return response.json()
     except requests.exceptions.RequestException as e:
