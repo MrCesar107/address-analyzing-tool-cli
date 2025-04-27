@@ -130,7 +130,6 @@ class URLFileProcessor:
             results_data.append(scan_data)
           except Exception as e:
             logger.error(f"Error processing results for {url}: {str(e)}")
-
       self._write_results(results_data, list(headers))
 
   def _extract_scan_data(self, engine: str, result: Dict) -> Dict:
@@ -139,14 +138,15 @@ class URLFileProcessor:
       prefix = 'ha_' if engine == 'HybridAnalysis' else 'rf_'
 
       if engine == 'RecordedFuture':
-        tasks = result.get('tasks', [])
-
-        for task in tasks:
-          key = f"{prefix}{task['id']}"
-          data[key] = task.get('status', 'N/A')
+        if isinstance(result, dict):
+          tasks = result.get('tasks', {})
+          for task_id, task_data in tasks.items():
+            if isinstance(task_data, dict):
+              key = f"{prefix}{task_id}"
+              data[key] = task_data.get('status', 'N/A')
+              data[f"{key}_score"] = task_data.get('score', 'N/A')
       else:
         scanners = result.get('scanners_v2', {})
-
         for scanner_name, scanner_data in scanners.items():
           key = f"{prefix}{scanner_name}"
           if isinstance(scanner_data, dict):
@@ -159,6 +159,8 @@ class URLFileProcessor:
   def _write_results(self, results: List[Dict], headers: List[str]) -> None:
     mode = 'w' if not self.results_file.exists() else 'a'
     write_headers = mode == 'w' or self.results_file.stat().st_size == 0
+
+    print(results)
 
     try:
         with open(self.results_file, mode, newline='', encoding='utf-8') as file:
