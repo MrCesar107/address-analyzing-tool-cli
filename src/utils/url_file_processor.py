@@ -108,75 +108,81 @@ class URLFileProcessor:
       self.file_control_check = True
       return schedule.CancelJob
 
-  def _generate_results(self) -> None:
-      results_data = []
-      headers = set(['url', 'generated_at'])
-
-      for entry in self.control_urls:
-        engine, url, scan_id, state = entry
-
-        if state and scan_id != "error":
-          try:
-            result = self.scanners[engine].retrieve_scan_results(scan_id)
-            scan_data = self._extract_scan_data(engine, result)
-
-            # Updates headers with new columns
-            headers.update(scan_data.keys())
-
-            # Add basic data
-            scan_data['url'] = url
-            scan_data['generated_at'] = int(datetime.now(pytz.timezone("America/Mexico_City")).timestamp())
-
-            results_data.append(scan_data)
-          except Exception as e:
-            logger.error(f"Error processing results for {url}: {str(e)}")
-      self._write_results(results_data, list(headers))
-
   def _extract_scan_data(self, engine: str, result: Dict) -> Dict:
-      """Extract and format URLs scanning results data"""
-      data = {}
-      prefix = 'ha_' if engine == 'HybridAnalysis' else 'rf_'
+    """Extracts and formats scan results from different engines into a standardized format"""
+    data = {}
 
-      if engine == 'RecordedFuture':
-        if isinstance(result, dict):
-          tasks = result.get('tasks', {})
-          for task_id, task_data in tasks.items():
-            if isinstance(task_data, dict):
-              key = f"{prefix}{task_id}"
-              data[key] = task_data.get('status', 'N/A')
-              data[f"{key}_score"] = task_data.get('score', 'N/A')
-      else:
-        scanners = result.get('scanners_v2', {})
-        for scanner_name, scanner_data in scanners.items():
-          key = f"{prefix}{scanner_name}"
-          if isinstance(scanner_data, dict):
-            data[key] = scanner_data.get('status', 'N/A')
-          else:
-            data[key] = scanner_data
+    if engine == 'RecordedFuture':
+      if isinstance(result, dict):
+        tasks = result.get('tasks', {})
+        for task_id, task_data in tasks.items():
+          if isinstance(task_data, dict):
+            data[f'rf_{task_id}'] = task_data.get('status', 'No results')
+            data[f'rf_{task_id}_score'] = task_data.get('score', 'No results')
+    else:  # HybridAnalysis
+      scanners = result.get('scanners_v2', {})
+      for scanner_name, scanner_data in scanners.items():
+        if isinstance(scanner_data, dict):
+          data[f'ha_{scanner_name}'] = scanner_data.get('status', 'No results')
+        else:
+          data[f'ha_{scanner_name}'] = scanner_data
 
-      return data
+    return data
+
+  def _generate_results(self) -> None:
+    # Dictionary to store results grouped by URL
+    url_results = {}
+
+    for entry in self.control_urls:
+      engine, url, scan_id, state = entry
+
+      if state and scan_id != "error":
+        try:
+          result = self.scanners[engine].retrieve_scan_results(scan_id)
+          scan_data = self._extract_scan_data(engine, result)
+
+          # Initialize URL entry if it doesn't exist
+          if url not in url_results:
+            url_results[url] = {
+                'url': url,
+                'generated_at': int(datetime.now(pytz.timezone("America/Mexico_City")).timestamp())
+            }
+
+            # Update URL results with new scan data
+            url_results[url].update(scan_data)
+        except Exception as e:
+          logger.error(f"Error processing results for {url}: {str(e)}")
+
+    # Convert dictionary to list for writing
+    results_data = list(url_results.values())
+
+    # Define the order of columns
+    base_headers = ['url', 'generated_at']
+    ha_headers = sorted([h for h in url_results[next(iter(url_results))].keys() if h.startswith('ha_')])
+    rf_headers = sorted([h for h in url_results[next(iter(url_results))].keys() if h.startswith('rf_')])
+
+    # Combine headers in desired order
+    headers = base_headers + ha_headers + rf_headers
+
+    self._write_results(results_data, headers)
 
   def _write_results(self, results: List[Dict], headers: List[str]) -> None:
-    mode = 'w' if not self.results_file.exists() else 'a'
-    write_headers = mode == 'w' or self.results_file.stat().st_size == 0
-
-    print(results)
-
+    # Always write in overwrite mode to avoid duplicates
     try:
-        with open(self.results_file, mode, newline='', encoding='utf-8') as file:
-          writer = csv.DictWriter(file, fieldnames=headers)
+      with open(self.results_file, 'w', newline='', encoding='utf-8') as file:
+        writer = csv.DictWriter(file, fieldnames=headers)
 
-          if write_headers:
-              writer.writeheader()
+        # Always write headers
+        writer.writeheader()
 
-          for row in results:
-              # Check all columns have a valid value
-              row_data = {header: row.get(header, 'N/A') for header in headers}
-              writer.writerow(row_data)
-        logger.info(f"Results written in {self.results_file}")
+        # Write each row ensuring all columns have a valid value
+        for row in results:
+          row_data = {header: row.get(header, 'No results') for header in headers}
+          writer.writerow(row_data)
+      logger.info(f"Results written in {self.results_file}")
     except Exception as e:
-        logger.error(f"Error writing results: {str(e)}")
-        raise
+      logger.error(f"Error writing results: {str(e)}")
+      raise
 
   def _destroy_file_control(self) -> None:
     try:
