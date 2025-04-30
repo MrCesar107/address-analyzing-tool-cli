@@ -117,8 +117,18 @@ class URLFileProcessor:
         tasks = result.get('tasks', {})
         for task_id, task_data in tasks.items():
           if isinstance(task_data, dict):
-            data[f'rf_{task_id}'] = task_data.get('status', 'No results')
-            data[f'rf_{task_id}_score'] = task_data.get('score', 'No results')
+            status = task_data.get('status', 'No results')
+            score = task_data.get('score', 'No results')
+            data[f'rf_{task_id}'] = status
+            data[f'rf_{task_id}_score'] = score
+        # Si no hay tareas, agregar columnas vacías para RecordedFuture
+        if not tasks:
+          data['rf_behavioral1'] = 'No results'
+          data['rf_behavioral1_score'] = 'No results'
+          data['rf_static1'] = 'No results'
+          data['rf_static1_score'] = 'No results'
+          data['rf_urlscan1'] = 'No results'
+          data['rf_urlscan1_score'] = 'No results'
     else:  # HybridAnalysis
       scanners = result.get('scanners_v2', {})
       for scanner_name, scanner_data in scanners.items():
@@ -133,25 +143,38 @@ class URLFileProcessor:
     # Dictionary to store results grouped by URL
     url_results = {}
 
+    # Procesar primero los resultados de RecordedFuture
     for entry in self.control_urls:
       engine, url, scan_id, state = entry
-
-      if state and scan_id != "error":
+      if engine == 'RecordedFuture' and state and scan_id != "error":
         try:
           result = self.scanners[engine].retrieve_scan_results(scan_id)
           scan_data = self._extract_scan_data(engine, result)
-
-          # Initialize URL entry if it doesn't exist
           if url not in url_results:
             url_results[url] = {
-                'url': url,
-                'generated_at': int(datetime.now(pytz.timezone("America/Mexico_City")).timestamp())
+              'url': url,
+              'generated_at': int(datetime.now(pytz.timezone("America/Mexico_City")).timestamp())
             }
-
-            # Update URL results with new scan data
-            url_results[url].update(scan_data)
+          url_results[url].update(scan_data)
         except Exception as e:
-          logger.error(f"Error processing results for {url}: {str(e)}")
+          logger.error(f"Error processing RecordedFuture results for {url}: {str(e)}")
+
+    # Luego procesar los resultados de HybridAnalysis
+    for entry in self.control_urls:
+      engine, url, scan_id, state = entry
+      if engine == 'HybridAnalysis' and state and scan_id != "error":
+        try:
+          result = self.scanners[engine].retrieve_scan_results(scan_id)
+          scan_data = self._extract_scan_data(engine, result)
+          
+          if url not in url_results:
+            url_results[url] = {
+              'url': url,
+              'generated_at': int(datetime.now(pytz.timezone("America/Mexico_City")).timestamp())
+            }
+          url_results[url].update(scan_data)
+        except Exception as e:
+          logger.error(f"Error processing HybridAnalysis results for {url}: {str(e)}")
 
     # Convert dictionary to list for writing
     results_data = list(url_results.values())
