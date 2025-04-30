@@ -190,18 +190,29 @@ class URLFileProcessor:
     self._write_results(results_data, headers)
 
   def _write_results(self, results: List[Dict], headers: List[str]) -> None:
-    # Always write in overwrite mode to avoid duplicates
     try:
+      # Leer el archivo existente si existe
+      existing_data = []
+      if self.results_file.exists() and self.results_file.stat().st_size > 0:
+        with open(self.results_file, 'r', newline='', encoding='utf-8') as file:
+          reader = csv.DictReader(file)
+          existing_data = list(reader)
+
+      # Combinar datos existentes con nuevos resultados
+      all_results = existing_data + results
+
+      # Escribir todos los resultados
       with open(self.results_file, 'w', newline='', encoding='utf-8') as file:
         writer = csv.DictWriter(file, fieldnames=headers)
 
-        # Always write headers
+        # Escribir encabezados
         writer.writeheader()
 
-        # Write each row ensuring all columns have a valid value
-        for row in results:
+        # Escribir todos los resultados
+        for row in all_results:
           row_data = {header: row.get(header, 'No results') for header in headers}
           writer.writerow(row_data)
+
       logger.info(f"Results written in {self.results_file}")
     except Exception as e:
       logger.error(f"Error writing results: {str(e)}")
