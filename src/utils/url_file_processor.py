@@ -143,7 +143,7 @@ class URLFileProcessor:
     # Dictionary to store results grouped by URL
     url_results = {}
 
-    # Procesar primero los resultados de RecordedFuture
+    # Process RecordedFutureResults
     for entry in self.control_urls:
       engine, url, scan_id, state = entry
       if engine == 'RecordedFuture' and state and scan_id != "error":
@@ -159,14 +159,14 @@ class URLFileProcessor:
         except Exception as e:
           logger.error(f"Error processing RecordedFuture results for {url}: {str(e)}")
 
-    # Luego procesar los resultados de HybridAnalysis
+    # Process HybridAnalysis results
     for entry in self.control_urls:
       engine, url, scan_id, state = entry
       if engine == 'HybridAnalysis' and state and scan_id != "error":
         try:
           result = self.scanners[engine].retrieve_scan_results(scan_id)
           scan_data = self._extract_scan_data(engine, result)
-          
+
           if url not in url_results:
             url_results[url] = {
               'url': url,
@@ -191,24 +191,21 @@ class URLFileProcessor:
 
   def _write_results(self, results: List[Dict], headers: List[str]) -> None:
     try:
-      # Leer el archivo existente si existe
+      # Read the file if it exists
       existing_data = []
       if self.results_file.exists() and self.results_file.stat().st_size > 0:
         with open(self.results_file, 'r', newline='', encoding='utf-8') as file:
           reader = csv.DictReader(file)
           existing_data = list(reader)
 
-      # Combinar datos existentes con nuevos resultados
+      # Combine existing data with new results
       all_results = existing_data + results
 
-      # Escribir todos los resultados
+      # Write all results
       with open(self.results_file, 'w', newline='', encoding='utf-8') as file:
         writer = csv.DictWriter(file, fieldnames=headers)
-
-        # Escribir encabezados
         writer.writeheader()
 
-        # Escribir todos los resultados
         for row in all_results:
           row_data = {header: row.get(header, 'No results') for header in headers}
           writer.writerow(row_data)
