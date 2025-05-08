@@ -108,7 +108,7 @@ class URLFileProcessor:
       self.file_control_check = True
       return schedule.CancelJob
 
-  def _extract_scan_data(self, engine: str, result: Dict) -> Dict:
+  def _extract_scan_data(self, engine: str, result: Dict, scan_id: str = None) -> Dict:
     """Extracts and formats scan results from different engines into a standardized format"""
     data = {}
 
@@ -117,11 +117,17 @@ class URLFileProcessor:
         tasks = result.get('tasks', {})
         for task_id, task_data in tasks.items():
           if isinstance(task_data, dict):
+            # Verify that the task_id starts with the provided scan_id
+            if scan_id and not task_id.startswith(scan_id):
+              continue
+
             status = task_data.get('status', 'No results')
             score = task_data.get('score', 'No results')
-            data[f'rf_{task_id}'] = status
-            data[f'rf_{task_id}_score'] = score
-        # Si no hay tareas, agregar columnas vacías para RecordedFuture
+            # Extract the engine name from the task_id
+            engine_name = task_id.split('-')[-1]
+            data[f'rf_{engine_name}'] = status
+            data[f'rf_{engine_name}_score'] = score
+        # If there are no tasks, add empty columns for RecordedFuture
         if not tasks:
           data['rf_behavioral1'] = 'No results'
           data['rf_behavioral1_score'] = 'No results'
@@ -149,7 +155,7 @@ class URLFileProcessor:
       if engine == 'RecordedFuture' and state and scan_id != "error":
         try:
           result = self.scanners[engine].retrieve_scan_results(scan_id)
-          scan_data = self._extract_scan_data(engine, result)
+          scan_data = self._extract_scan_data(engine, result, scan_id)
           if url not in url_results:
             url_results[url] = {
               'url': url,
