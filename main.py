@@ -6,6 +6,7 @@
 # =========================================
 
 import argparse
+import sys
 from src.config.settings import settings
 from src.core.logger import logger
 from src.scanners.hybrid_analysis import HybridAnalysisScanner
@@ -83,6 +84,10 @@ def main():
     choices=settings.AVAILABLE_ENGINES,
     help='Available URLs analyzing engines'
   )
+
+  if len(sys.argv) == 1:
+    parser.print_help()
+    return
 
   args = parser.parse_args()
   analyzer = URLAnalyzer()
