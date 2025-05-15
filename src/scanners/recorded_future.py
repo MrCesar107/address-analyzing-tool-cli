@@ -1,3 +1,10 @@
+# =========================================
+# Address Analyzing Terminal Tool
+# By Cesar Augusto Rodriguez Lara
+# https://github.com/MrCesar107
+# GNU GPL3 License
+# =========================================
+
 from src.scanners.base_scanner import BaseScanner
 from src.core.exceptions import APIError
 from src.core.logger import logger

@@ -1,3 +1,10 @@
+# =========================================
+# Address Analyzing Terminal Tool
+# By Cesar Augusto Rodriguez Lara
+# https://github.com/MrCesar107
+# GNU GPL3 License
+# =========================================
+
 import logging
 from pathlib import Path
 from logging.handlers import RotatingFileHandler

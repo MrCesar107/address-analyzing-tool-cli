@@ -1,3 +1,10 @@
+# =========================================
+# Address Analyzing Terminal Tool
+# By Cesar Augusto Rodriguez Lara
+# https://github.com/MrCesar107
+# GNU GPL3 License
+# =========================================
+
 class ScannerError(Exception):
   # Base exception for scanning-related errors
   pass

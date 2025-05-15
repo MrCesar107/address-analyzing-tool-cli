@@ -1,3 +1,10 @@
+# =========================================
+# Address Analyzing Terminal Tool
+# By Cesar Augusto Rodriguez Lara
+# https://github.com/MrCesar107
+# GNU GPL3 License
+# =========================================
+
 from src.scanners.hybrid_analysis import HybridAnalysisScanner
 from src.scanners.recorded_future import RecordedFutureScanner
 from src.scanners.base_scanner import URLScanner

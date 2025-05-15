@@ -1,3 +1,10 @@
+# =========================================
+# Address Analyzing Terminal Tool
+# By Cesar Augusto Rodriguez Lara
+# https://github.com/MrCesar107
+# GNU GPL3 License
+# =========================================
+
 import os
 from typing import Dict
 from dataclasses import dataclass
