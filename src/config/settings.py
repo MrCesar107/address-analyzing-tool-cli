@@ -26,7 +26,7 @@ class Settings:
     return {
       "HybridAnalysis": {
         "api_key_env": os.getenv("HYBRID_ANALYSIS_API_KEY"),
-        "base_url": "https://www.hybrid-analysis.com/api/v2/quick-scan"
+        "base_url": "https://hybrid-analysis.com/api/v2"
       },
       "RecordedFuture": {
         "api_key_env": os.getenv("RECORDED_FUTURE_BEARER_TOKEN"),

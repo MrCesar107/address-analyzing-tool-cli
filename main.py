@@ -16,7 +16,6 @@ from src.utils.url_file_processor import URLFileProcessor
 
 class URLAnalyzer:
   def __init__(self):
-    #print(settings.get_scanner_config("HybridAnalysis"))
     self.scanners = {}
     self._initialize_scanners()
     self.file_handler = ResultsFileHandler()

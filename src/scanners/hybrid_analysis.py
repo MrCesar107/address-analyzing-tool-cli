@@ -20,7 +20,11 @@ class HybridAnalysisScanner(BaseScanner):
     logger.info(f"Scanning URL with HybridAnalysis engine: {url}")
 
     try:
-      response = self.session.post(f"{self.base_url}/url", data={"url": url, "scan_type": "all"})
+      response = self.session.post(
+        f"{self.base_url}/quick-scan/url",
+        data={"url": url, "scan_type": "all"}
+      )
+
       response.raise_for_status()
       return response.json()
     except requests.exceptions.RequestException as e:
@@ -31,7 +35,7 @@ class HybridAnalysisScanner(BaseScanner):
     logger.info(f"Retrieving HybridAnalysis scanning results")
 
     try:
-      response = self.session.get(f"{self.base_url}/{scan_id}")
+      response = self.session.get(f"{self.base_url}/quick-scan/{scan_id}")
       response.raise_for_status()
       return response.json()
     except requests.exceptions.RequestException as e:
