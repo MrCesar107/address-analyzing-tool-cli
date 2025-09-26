@@ -62,3 +62,19 @@ To print the scanning engines available in the script
 
 To print the help manual of the script
 `$ address_analyzing_tool -h`
+
+## Update
+
+To update the script follow the next instructions
+
+### Manual update
+
+**Full update (recommended):**
+```bash
+$ ./update.sh
+```
+
+**Quick update:**
+```bash
+$ ./quick-update.sh
+```
