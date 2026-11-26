@@ -68,8 +68,8 @@ class URLFileProcessor:
           try:
             result = scanner.scan_url(url)
             scan_id = result.get('id')
-            completed = result.get('completed', result.get('finished', False))
-            writer.writerow([engine_name, url, scan_id, completed])
+            completed = str(result.get('completed', result.get('finished', False))).lower()
+            writer.writerow([engine_name, url, scan_id, "false"])
             self.control_urls.append([engine_name, url, scan_id, completed])
           except Exception as e:
             logger.error(f"Error while scanning {url} with {engine_name}: {str(e)}")

@@ -23,20 +23,35 @@ class RecordedFutureScanner(BaseScanner):
     logger.info(f"Scanning URL with RecordedFuture engine: {url}")
 
     try:
-      response = self.session.post(f"{self.base_url}/samples", data=json.dumps({"url": url}))
+      response = self.session.post(
+          f"{self.base_url}/samples", 
+          data=json.dumps({"url": url}),
+          timeout=30  # 30 seconds timeout for the entire request
+      )
       response.raise_for_status()
       return response.json()
+    except requests.exceptions.Timeout as e:
+      logger.error(f"RecordedFuture scan timeout for {url}: {str(e)}")
+      raise APIError("Request timed out while contacting RecordedFuture API.", None)
     except requests.exceptions.RequestException as e:
-      logger.error(f"Error in RecordedFuture scanning {str(e)}")
-      raise APIError(str(e), getattr(e.response, "status_code", None))
+      logger.error(f"Error in RecordedFuture scanning for {url}: {str(e)}")
+      status_code = getattr(e.response, "status_code", None) if hasattr(e, "response") else None
+      raise APIError(str(e), status_code)
 
   def retrieve_scan_results(self, scan_id: str) -> dict:
     logger.info(f"Retrieving RecordedFuture scanning results")
 
     try:
-      response = self.session.get(f"{self.base_url}/samples/{scan_id}/summary")
+      response = self.session.get(
+          f"{self.base_url}/samples/{scan_id}/summary",
+          timeout=30  # 30 seconds timeout for the entire request
+      )
       response.raise_for_status()
       return response.json()
+    except requests.exceptions.Timeout as e:
+      logger.error(f"Timeout retrieving RecordedFuture scan results for {scan_id}: {str(e)}")
+      raise APIError("Request timed out while retrieving RecordedFuture scan results.", None)
     except requests.exceptions.RequestException as e:
-      logger.error(f"Error retrieving RecordedFuture scan {str(e)}")
-      raise APIError(str(e), getattr(e.response, "status_code", None))
+      logger.error(f"Error retrieving RecordedFuture scan results for {scan_id}: {str(e)}")
+      status_code = getattr(e.response, "status_code", None) if hasattr(e, "response") else None
+      raise APIError(str(e), status_code)
